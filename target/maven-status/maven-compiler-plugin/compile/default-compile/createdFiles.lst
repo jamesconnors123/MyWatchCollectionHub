@@ -1,0 +1,8 @@
+com\mywatchcollectionhub\service\MetadataCollectionService.class
+com\mywatchcollectionhub\MyWatchCollectionHubApplication.class
+com\mywatchcollectionhub\repository\WatchRepository.class
+com\mywatchcollectionhub\service\ImageRecognitionService$WatchMetadata.class
+com\mywatchcollectionhub\service\WatchService.class
+com\mywatchcollectionhub\service\ImageRecognitionService.class
+com\mywatchcollectionhub\model\Watch.class
+com\mywatchcollectionhub\controller\WatchController.class
