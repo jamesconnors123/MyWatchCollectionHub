@@ -1,0 +1,286 @@
+<!--
+  Baseline documentation for the MyWatchCollectionHub project.
+  Version: v0.1
+  Date:    08 Aug 2025 03:13 (BST)
+-->
+<h1 id="mywatchcollectionhub-solution-design-v0.1">MyWatchCollectionHub
+Solution Design (v0.1)</h1>
+<h2 id="overview">Overview</h2>
+<p>This document describes the implementation strategy for
+<strong>MyWatchCollectionHub</strong>, an application for cataloguing a
+personal watch collection. The goal is to automatically ingest images of
+watches, deduplicate them, identify each unique watch (brand, model,
+year, etc.), enrich the data with resale values and references, store
+the records in a database and expose them via a web UI. The project will
+be implemented in <strong>Java</strong> using <strong>Spring
+Boot</strong> for the backend and a modern JavaScript framework (e.g.,
+React) for the frontend. Advanced tasks like image clustering and
+recognition will be delegated to Python microservices that employ
+deep‑learning libraries.</p>
+<h3 id="document-history">Document History</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Version</th>
+<th>Date &amp; Time (BST)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"><strong>0.1</strong></td>
+<td>08 Aug 2025 03:13</td>
+<td>Baseline document</td>
+</tr>
+</tbody>
+</table>
+<h2 id="highlevel-implementation-plan">High‑Level Implementation
+Plan</h2>
+<p>The application will be built iteratively. Each stage focuses on a
+key feature set to ensure incremental progress and maintainability. The
+table below summarises the major features and corresponding tasks.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Tasks</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Image Ingestion &amp; Deduplication</strong></td>
+<td>* Allow users to upload multiple images via the frontend.* Generate
+image embeddings using a pre‑trained convolutional network (e.g.,
+ResNet). Cluster embeddings with DBSCAN or hierarchical clustering to
+group images of the same watch. Each cluster becomes a unique watch
+record.</td>
+</tr>
+<tr class="even">
+<td><strong>Watch Detection &amp; Classification</strong></td>
+<td>* Use an object‑detection model such as <strong>YOLO v7/v8</strong>
+to detect watches in images. YOLO is a single‑shot detector known for
+its speed and accuracy.* Crop detected watch regions and classify
+brand/model with a fine‑tuned classifier (e.g., ResNet,
+EfficientNet).</td>
+</tr>
+<tr class="odd">
+<td><strong>OCR &amp; Text Extraction</strong></td>
+<td>* Run OCR on cropped watch faces/case backs to extract text such as
+brand names and model numbers. Consider using open‑source OCR libraries
+like <strong>Tesseract</strong> or modern vision–language models (e.g.,
+<strong>TrOCR</strong>, <strong>EasyOCR</strong>). Recent benchmarks
+show there are many OCR options (25 models tested in 2024) covering both
+local and cloud solutions.</td>
+</tr>
+<tr class="even">
+<td><strong>Metadata Enrichment</strong></td>
+<td>* Query external sources to enrich watch records: brand histories,
+model specifications and estimated resale values. Use APIs (e.g., eBay
+search, Chrono24 pricing API) where available; otherwise, implement web
+scraping with care for rate limits and terms of service.</td>
+</tr>
+<tr class="odd">
+<td><strong>Data Storage</strong></td>
+<td>* Design a relational schema using PostgreSQL. Core tables include
+<strong>watch</strong>, <strong>image</strong>,
+<strong>price_history</strong> and <strong>reference_link</strong>. Use
+JPA annotations in Java to map entities.</td>
+</tr>
+<tr class="even">
+<td><strong>Backend API</strong></td>
+<td>* Implement RESTful endpoints in Spring Boot for CRUD operations on
+watches, image uploads, search/filtering and data export. Use service
+classes to encapsulate business logic.</td>
+</tr>
+<tr class="odd">
+<td><strong>Frontend UI</strong></td>
+<td>* Build a single‑page application in React. Provide pages for image
+upload, watch list overview, detailed watch view, search/filtering and
+editing. Connect to the backend via REST/JSON.</td>
+</tr>
+<tr class="even">
+<td><strong>Security &amp; Auth</strong></td>
+<td>* Integrate basic authentication (JWT or OAuth2) to protect
+endpoints. Use Spring Security on the backend and a login flow on the
+frontend.</td>
+</tr>
+<tr class="odd">
+<td><strong>Deployment &amp; DevOps</strong></td>
+<td>* Containerise the backend using Docker. Provide Docker Compose for
+database and backend. Configure CI/CD pipelines (GitHub Actions) to run
+tests and build Docker images.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="detailed-solution-design">Detailed Solution Design</h2>
+<h3 id="image-ingestion-deduplication">1. Image Ingestion &amp;
+Deduplication</h3>
+<ol type="1">
+<li><strong>User Upload</strong>: The frontend allows batch upload of
+JPEG/PNG files. Files are sent to the backend as multipart form
+data.</li>
+<li><strong>Storage</strong>: Uploaded images are stored in a local file
+system or cloud storage (e.g., Amazon S3) and linked to a temporary
+“upload session”.</li>
+<li><strong>Embedding Extraction</strong>: A Python microservice exposes
+an endpoint that accepts image files and returns embeddings from a
+pre‑trained CNN (ResNet50) truncated before the classification layer.
+The Java backend calls this microservice after storing the image.</li>
+<li><strong>Clustering</strong>: With all embeddings for the upload
+session, perform clustering using DBSCAN (density‑based) to group
+similar images. Each cluster is treated as a candidate watch. If
+clustering yields noise points (images that don’t clearly belong to a
+cluster), they are reviewed manually.</li>
+</ol>
+<h3 id="watch-detection-classification">2. Watch Detection &amp;
+Classification</h3>
+<ol type="1">
+<li><strong>Object Detection</strong>: For each image, run a YOLOv7/v8
+model to locate the watch bounding box. YOLO is a single‑shot detector
+known for its fast performance and accurate object detection. The model
+can be obtained from open‑source model zoos and fine‑tuned on watch
+photos.</li>
+<li><strong>Cropping</strong>: Use the detected bounding boxes to crop
+watch regions. Pass the cropped images to the classifier and OCR
+components.</li>
+<li><strong>Classification</strong>: Fine‑tune a CNN (e.g., ResNet,
+EfficientNet) on a labelled dataset of watch images. Labelled data can
+be collected gradually by combining public datasets and manual
+annotation. The classifier outputs brand and model probabilities. If the
+confidence is low, rely on OCR and external metadata to determine the
+watch.</li>
+</ol>
+<h3 id="ocr-text-extraction">3. OCR &amp; Text Extraction</h3>
+<ol type="1">
+<li><strong>OCR Engine</strong>: Use open‑source OCR libraries such as
+<strong>Tesseract</strong> for basic text extraction. For better
+accuracy on small watch dials, evaluate modern vision–language models
+like <strong>TrOCR</strong> or <strong>EasyOCR</strong>; a recent
+benchmark evaluated a broad range of OCR models, including TrOCR,
+Qwen2.5‑VL, EasyOCR and many others.</li>
+<li><strong>Post‑processing</strong>: Clean the OCR results (remove
+special characters, normalise brand names). Use regular expressions or
+fuzzy matching to map model numbers to known patterns.</li>
+<li><strong>Brand/Model Resolution</strong>: Cross‑reference the
+extracted text with classification results. If there is a conflict,
+prioritise the more confident source or flag for manual review.</li>
+</ol>
+<h3 id="metadata-enrichment">4. Metadata Enrichment</h3>
+<ol type="1">
+<li><strong>Reference Sources</strong>: Identify APIs or scraping
+targets: Chrono24 and WatchCharts for price data; eBay for recent sales;
+WatchBase or official brand pages for specifications and
+descriptions.</li>
+<li><strong>API Clients</strong>: Implement scheduled tasks in Java
+(Spring’s <code>@Scheduled</code>) to query these sources. For example,
+periodically update the estimated resale value using average sale prices
+over the last six months.</li>
+<li><strong>Data Normalisation</strong>: Normalise price currencies to a
+base currency (e.g., GBP). Convert dates and numeric fields to proper
+types. Store data in dedicated tables (e.g.,
+<code>price_history</code>).</li>
+</ol>
+<h3 id="data-storage-schema">5. Data Storage &amp; Schema</h3>
+<p>The database schema will be defined using JPA entities:</p>
+<ul>
+<li><code>Watch</code> (id, brand, model, year, resale_value,
+description).</li>
+<li><code>Image</code> (id, watch_id, url, original_filename,
+upload_date).</li>
+<li><code>ReferenceLink</code> (id, watch_id, url, description).</li>
+<li><code>PriceHistory</code> (id, watch_id, price, currency, source,
+timestamp).</li>
+<li><code>Tag</code> (id, watch_id, name).</li>
+</ul>
+<p>Relationships are mostly one‑to‑many (one watch has many images,
+price history records, links and tags). Use
+<code>@ElementCollection</code> for simple lists (as shown in the
+prototype) or separate entity classes for more complex
+relationships.</p>
+<h3 id="backend-api-design">6. Backend API Design</h3>
+<ul>
+<li><code>/api/watches</code> – <code>GET</code> (list),
+<code>POST</code> (create new watch with metadata),
+<code>GET /{id}</code> (fetch details), <code>PUT /{id}</code> (update),
+<code>DELETE /{id}</code>.</li>
+<li><code>/api/watches/{id}/images</code> – endpoints to upload and
+retrieve images.</li>
+<li><code>/api/search</code> – search watches by brand, model, year or
+tags; support pagination and sorting.</li>
+<li><code>/api/export</code> – export watch data as CSV/Excel.</li>
+</ul>
+<p>Swagger/OpenAPI documentation will be generated using SpringDoc.</p>
+<h3 id="frontend-design">7. Frontend Design</h3>
+<p>The frontend will be a React application created with Vite or Create
+React App. Key pages/components include:</p>
+<ol type="1">
+<li><strong>Upload Page</strong>: Allows drag‑and‑drop upload of
+multiple images. Shows progress and clustering results.</li>
+<li><strong>Watch List</strong>: Displays all watches in a grid/table
+with thumbnails, brand, model and value. Includes search and filter
+controls.</li>
+<li><strong>Watch Detail</strong>: Shows all images, metadata, price
+history chart and reference links for a single watch. Allows editing
+fields.</li>
+<li><strong>Login / User Management</strong>: Basic authentication and
+profile settings.</li>
+</ol>
+<p>State management will use React Query or Redux Toolkit. UI components
+can be built with a design system like Material‑UI.</p>
+<h3 id="security-authentication">8. Security &amp; Authentication</h3>
+<ul>
+<li>Use Spring Security with JWT tokens for stateless authentication.
+Protect API endpoints and expose login/registration endpoints.</li>
+<li>Implement role‑based access control if multiple users are
+introduced.</li>
+<li>Ensure file uploads are scanned for malicious content and restrict
+file sizes.</li>
+</ul>
+<h3 id="deployment-devops">9. Deployment &amp; DevOps</h3>
+<ul>
+<li><strong>Local Development</strong>: Use Docker Compose to run the
+backend, database and Python microservice. Mount local volumes for
+persistence.</li>
+<li><strong>Continuous Integration</strong>: Set up GitHub Actions to
+run unit tests on each commit and build Docker images on merges into
+main.</li>
+<li><strong>Hosting</strong>: Deploy the backend to a cloud platform
+such as AWS ECS, Azure App Service or Heroku. Use an S3 bucket or Azure
+Blob Storage for image storage. The frontend can be hosted via a CDN
+(e.g., Vercel, Netlify).</li>
+</ul>
+<h3 id="implementation-timeline">10. Implementation Timeline</h3>
+<ol type="1">
+<li><strong>Phase 1 – Documentation &amp; Setup</strong>: Finalise
+solution design, set up repositories, create base Spring Boot and React
+projects. (1 week)</li>
+<li><strong>Phase 2 – Image Ingestion</strong>: Implement image upload,
+storage and clustering service. Integrate with Python microservice for
+embeddings. (2 weeks)</li>
+<li><strong>Phase 3 – Detection &amp; Classification</strong>: Fine‑tune
+and integrate YOLO and classification models. Build pipelines to detect
+and classify watches. (3 weeks)</li>
+<li><strong>Phase 4 – OCR &amp; Metadata</strong>: Integrate OCR
+service, implement metadata enrichment, design price update tasks.
+(2 weeks)</li>
+<li><strong>Phase 5 – API &amp; DB</strong>: Flesh out REST endpoints,
+implement search, refine database schema and write integration tests.
+(2 weeks)</li>
+<li><strong>Phase 6 – Frontend</strong>: Build UI screens, integrate
+with backend, implement authentication. (2 weeks)</li>
+<li><strong>Phase 7 – Testing &amp; Deployment</strong>: Conduct
+end‑to‑end tests, add documentation, set up CI/CD and deploy.
+(1 week)</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>The proposed design leverages state‑of‑the‑art computer vision
+techniques (YOLO for object detection, CNNs for classification and
+modern OCR models) in a modular architecture. A Java/Spring Boot backend
+manages data and business logic while Python microservices handle
+resource‑intensive AI tasks. A React frontend provides an intuitive user
+experience. The next step is to refine this design based on feedback and
+begin implementing Phase 1.</p>
