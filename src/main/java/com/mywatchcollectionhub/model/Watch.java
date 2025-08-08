@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,10 @@ public class Watch {
 
     private String brand;
     private String model;
+    /**
+     * Year the watch was manufactured.  Renamed column to avoid reserved SQL keywords.
+     */
+    @Column(name = "manufacture_year")
     private Integer year;
     private Double resaleValue;
     private String description;

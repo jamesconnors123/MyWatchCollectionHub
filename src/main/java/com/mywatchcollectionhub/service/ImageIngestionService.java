@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * High‑level service orchestrating image ingestion, clustering and watch creation.
  *
@@ -25,6 +28,11 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ImageIngestionService {
+    /**
+     * Logger for reporting ingestion progress.  Using Slf4j allows the
+     * logback configuration to capture these messages in the application log.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(ImageIngestionService.class);
     private final ImageStorageService storageService;
     private final ImageClusteringService clusteringService;
     private final ImageRecognitionService recognitionService;
@@ -53,7 +61,9 @@ public class ImageIngestionService {
      */
     public List<Watch> ingestImages(MultipartFile[] files) throws IOException {
         // Step 1: persist images to local storage
+        logger.info("Ingesting {} uploaded images", files != null ? files.length : 0);
         List<File> stored = storageService.saveImages(files);
+        logger.info("Saved {} images to storage", stored.size());
         // Step 2: cluster images to group by watch
         // Cluster images into groups.  The clustering service now runs fully
         // in Java and does not throw InterruptedException.
@@ -63,6 +73,7 @@ public class ImageIngestionService {
         for (Map.Entry<File, Integer> entry : clusterMap.entrySet()) {
             clusters.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
+        logger.info("Clustered images into {} group(s)", clusters.size());
         List<Watch> created = new ArrayList<>();
         for (Map.Entry<Integer, List<File>> entry : clusters.entrySet()) {
             List<File> group = entry.getValue();
@@ -86,8 +97,31 @@ public class ImageIngestionService {
             watch.setReferenceLinks(new ArrayList<>());
             watch.setTags(new ArrayList<>());
             watch = watchService.save(watch);
+            logger.info("Created watch: brand={}, model={}, year={}, images={}",
+                    watch.getBrand(), watch.getModel(), watch.getYear(), imagePaths.size());
             created.add(watch);
         }
         return created;
+    }
+
+    /**
+     * Convenience method to ingest a list of image files stored on disk.
+     *
+     * <p>
+     * This method wraps each {@link java.io.File} in a {@link SimpleMultipartFile}
+     * so that it can be passed through the existing ingestion pipeline.  It
+     * returns the list of persisted {@link Watch} entities created from the
+     * processed images.
+     *
+     * @param files the image files to ingest
+     * @return list of persisted watch entities
+     * @throws IOException if reading or saving any image fails
+     */
+    public List<Watch> ingestImageFiles(List<File> files) throws IOException {
+        MultipartFile[] mfiles = new MultipartFile[files.size()];
+        for (int i = 0; i < files.size(); i++) {
+            mfiles[i] = new SimpleMultipartFile(files.get(i));
+        }
+        return ingestImages(mfiles);
     }
 }

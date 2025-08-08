@@ -3,7 +3,8 @@ package com.mywatchcollectionhub.service;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Image;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +33,8 @@ public class ImageClusteringService {
     /**
      * Epsilon parameter controlling the maximum distance between two
      * histograms for them to be considered neighbours.  Smaller values
-     * result in more clusters.  This default mirrors the Python script's
-     * default of 0.5.  It can be tuned as needed.
+     * result in more clusters.  The default value of 0.5 was chosen
+     * experimentally and can be tuned as needed.
      */
     private static final double EPS = 0.5;
 

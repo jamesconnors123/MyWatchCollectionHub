@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+        Custom logging configuration for MyWatchCollectionHub.
+
+        This configuration writes all application logs to the console (via the
+        default CONSOLE appender) and to a rolling file located in the
+        "logs" directory relative to the working directory.  Files are
+        rotated daily and when they exceed 10 MB, and up to 30 days and
+        100 MB of logs are retained.  Adjust the maxHistory or totalSizeCap
+        as necessary for your environment.
+    -->
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Path to the main log file -->
+    <property name="LOG_FILE" value="logs/mywatchcollectionhub.log" />
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily rollover with an index for multiple files per day -->
+            <fileNamePattern>logs/mywatchcollectionhub-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Reduce Spring framework logging noise; adjust as needed -->
+    <logger name="org.springframework" level="INFO"/>
+
+    <root level="INFO">
+        <!-- Write logs to our rolling file -->
+        <appender-ref ref="FILE"/>
+        <!-- And to the console (provided by Spring Boot defaults) -->
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

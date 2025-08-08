@@ -34,8 +34,8 @@ solution or changes that need to be made to what I propose to make it better?
 
 ### 2. Image Recognition and Identification
 
-* **Image Deduplication:** Use AI-based clustering (e.g., unsupervised learning) to group images of the same watch based
-  on visual similarity.
+* **Image Deduplication:** Use AI‑based clustering (e.g., unsupervised learning) to group images of the same watch based
+  on visual similarity. In the current code, clustering is implemented directly in Java, removing the need for a separate Python script.
 * **Feature Extraction:** Use a pre-trained image recognition model (e.g., ResNet or YOLO) fine-tuned for watch
   identification to recognize makes, models, and other distinguishing features.
 * **OCR for Text Recognition:** Detect and extract text (e.g., brand, model number) from the watch face or case back.
@@ -63,7 +63,7 @@ solution or changes that need to be made to what I propose to make it better?
 ### 5. User Interface
 
 * Frontend: A web application built using React or Angular.
-* Backend: A RESTful or GraphQL API built with Java (using Spring Boot) or Python (using Flask/Django).
+* Backend: A RESTful or GraphQL API built with Java (using Spring Boot).  Earlier drafts considered Python-based microservices for clustering, but the current implementation uses Java throughout to simplify deployment.
 * Features:
     + Search and filter by brand, model, value, year, etc.
     + Display images and metadata in a clean layout.
