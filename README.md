@@ -16,19 +16,24 @@ Could you please review what I am describing and work out whether it is feasible
 
 ## High Level Design/Implementation Timeline Plan
 
-### 1. Image Recognition and Identification
+### 1. Framework Core Design
+
+* I would like the framework to be a Java/Maven project.
+* I will use IntelliJ Community Edition as the IDE on my local machine to work with the Project.
+
+### 2. Image Recognition and Identification
 
 * **Image Deduplication:** Use AI-based clustering (e.g., unsupervised learning) to group images of the same watch based on visual similarity.
 * **Feature Extraction:** Use a pre-trained image recognition model (e.g., ResNet or YOLO) fine-tuned for watch identification to recognize makes, models, and other distinguishing features.
 * **OCR for Text Recognition:** Detect and extract text (e.g., brand, model number) from the watch face or case back.
 
-### 2. Metadata Collection
+### 3. Metadata Collection
 
 * Make, Model, and Year: Use online APIs (like Google Vision, eBay, or Watch databases) to fetch detailed information about identified watches.
 * Resale Value: Scrape or query platforms like Chrono24, eBay, or WatchCharts for recent pricing information.
 * Brand and Model Information: Fetch descriptions from reliable watch-related resources.
 
-### 3. Database Design
+### 4. Database Design
 
 * Use a relational database like PostgreSQL or SQLite for structured storage or NoSQL (e.g., MongoDB) for more flexibility.
 * Each record would store:
@@ -40,7 +45,7 @@ Could you please review what I am describing and work out whether it is feasible
   + Links to references
   + Tags for easier searching
 
-### 4. User Interface
+### 5. User Interface
 
 * Frontend: A web application built using React or Angular.
 * Backend: A RESTful or GraphQL API built with Java (using Spring Boot) or Python (using Flask/Django).
@@ -50,7 +55,7 @@ Could you please review what I am describing and work out whether it is feasible
   + Editable records for corrections.
   + Export functionality (e.g., CSV/Excel).
 
-### 5. Implementation Flow
+### 6. Implementation Flow
 
 1. **Image Input:** Accept multiple images and preprocess them.
 2. **Clustering:** Group images to identify unique watches.
@@ -59,7 +64,7 @@ Could you please review what I am describing and work out whether it is feasible
 5. **Database Population:** Save information in the database.
 6. **Frontend Integration:** Present data in an interactive UI.
 
-### 6. Feasibility Considerations
+### 7. Feasibility Considerations
 
 * **Scalability:** Ensure the design can handle adding more images over time.
 * **Accuracy:** Fine-tune AI models for higher precision in identifying vintage watches.
