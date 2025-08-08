@@ -37,23 +37,23 @@ Could you please review what I am describing and work out whether it is feasible
 
 * Use a relational database like PostgreSQL or SQLite for structured storage or NoSQL (e.g., MongoDB) for more flexibility.
 * Each record would store:
-  + Unique ID
-  + Clustered images
-  + Identified metadata (brand, model, etc.)
-  + Resale value
-  + Description
-  + Links to references
-  + Tags for easier searching
+    + Unique ID
+    + Clustered images
+    + Identified metadata (brand, model, etc.)
+    + Resale value
+    + Description
+    + Links to references
+    + Tags for easier searching
 
 ### 5. User Interface
 
 * Frontend: A web application built using React or Angular.
 * Backend: A RESTful or GraphQL API built with Java (using Spring Boot) or Python (using Flask/Django).
 * Features:
-  + Search and filter by brand, model, value, year, etc.
-  + Display images and metadata in a clean layout.
-  + Editable records for corrections.
-  + Export functionality (e.g., CSV/Excel).
+    + Search and filter by brand, model, value, year, etc.
+    + Display images and metadata in a clean layout.
+    + Editable records for corrections.
+    + Export functionality (e.g., CSV/Excel).
 
 ### 6. Implementation Flow
 
